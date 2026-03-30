@@ -1,68 +1,57 @@
-import copy
+##steepest ascent hill climbing
 
-goal = ['A','B','C', 'D']
-
-# Heuristic function
-def heuristic(state):
-    score = 0
-    for stack in state:
-        for i in range(len(stack)):
-            if i < len(goal) and stack[i] == goal[i]:
-                score += 1
-    return score
-
-
-# Generate successors
-def successors(state):
-    succ = []
-
+def heuristic(state, goal):
+    """Count number of blocks in correct position"""
+    h = 0
     for i in range(len(state)):
-        if len(state[i]) == 0:
-            continue
-
-        for j in range(len(state)):
-            if i != j:
-                new_state = copy.deepcopy(state)
-
-                block = new_state[i].pop()
-                new_state[j].append(block)
-
-                succ.append(new_state)
-
-    return succ
+        if state[i] == goal[i]:
+            h += 1
+    return h
 
 
-def steepest_ascent(initial):
-
+def steepest_ascent_hill_climbing(initial, goal):
     current = initial
+    print("Initial State:", current)
 
     while True:
+        current_h = heuristic(current, goal)
+        neighbors = []
 
-        current_h = heuristic(current)
-        best_state = current
-        best_h = current_h
+        # Generate neighbors by swapping adjacent blocks
+        for i in range(len(current) - 1):
+            new_state = current[:]
+            new_state[i], new_state[i+1] = new_state[i+1], new_state[i]
+            neighbors.append(new_state)
 
-        print("Current State:", current, "h =", current_h)
+        # Evaluate all neighbors
+        scored_neighbors = []
+        for state in neighbors:
+            h = heuristic(state, goal)
+            scored_neighbors.append((h, state))
 
-        for s in successors(current):
+        # Sort neighbors based on heuristic (descending)
+        scored_neighbors.sort(reverse=True)
 
-            h = heuristic(s)
+        best_h, best_state = scored_neighbors[0]
 
-            if h > best_h:
-                best_state = s
-                best_h = h
-
+        # If no improvement, stop
         if best_h <= current_h:
-            print("No better successor found (Local Maximum)")
             break
 
         current = best_state
+        print("Next State:", current)
 
-        if heuristic(current) == len(goal):
-            print("Goal Reached:", current)
-            break
+    return current
 
 
-initial = [['D','C','B'],['A']]
+# Example
+initial_state = ['B', 'A', 'D', 'C']
+goal_state = ['A', 'B', 'C', 'D']
 
-steepest_ascent(initial)
+result = steepest_ascent_hill_climbing(initial_state, goal_state)
+
+print("Final State:", result)
+if result == goal_state:
+    print("Goal Reached!")
+else:
+    print("Stuck at Local Optimum")
